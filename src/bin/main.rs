@@ -1,9 +1,8 @@
-use conftool::cli;
-use conftool::parser;
+use conftool::{cli,parser,list,Mode,ListOp};
 use std::process::exit;
 
 fn main() {
-    let state = cli::args::parse().expect("Invalid arguments, see --help");
+    let state = cli::args::parse().expect("Invalid arguments, try --help");
 
     if !state.spec.exists() {
         eprintln!("Specification {} does not exist", state.spec.display());
@@ -20,11 +19,13 @@ fn main() {
 
     let entries = parser::parse_spec(&state.spec).unwrap();
 
-    for ent in entries {
-        println!("{}", ent.name);
-        println!("  depends: {:?}", ent.depends);
-        println!("  type: {:?}", ent.enttype);
-        println!("  choices: {:?}", ent.choices);
-        println!("  help: {}", ent.help);
+    match state.mode {
+        Mode::List { op } => {
+            match op {
+                ListOp::Show(option) => {
+                    list::show(&option, &entries).unwrap()
+                }
+            }
+        }
     }
 }

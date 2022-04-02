@@ -3,13 +3,7 @@ use serde_json::Value;
 use std::error::Error;
 use std::fs;
 use std::path::PathBuf;
-
-#[derive(Debug, Deserialize)]
-pub enum EntryType {
-    Switch(Switch),
-    String(String),
-    Int(i32)
-}
+use crate::{ConfigEntry,EntryType,Switch};
 
 #[derive(Debug, Deserialize)]
 struct ParseEntry {
@@ -30,21 +24,6 @@ struct ParseEntry {
 #[derive(Debug, Deserialize)]
 struct ParseSequence {
     entries: Vec<ParseEntry>
-}
-
-#[derive(Debug, Deserialize)]
-pub enum Switch {
-    Yes,
-    No
-}
-
-#[derive(Debug)]
-pub struct ConfigEntry {
-    pub name: String,
-    pub depends: Vec<String>,
-    pub enttype: EntryType,
-    pub choices: Option<Vec<EntryType>>,
-    pub help: String
 }
 
 pub fn parse_spec(path: &PathBuf) -> Result<Vec<ConfigEntry>, Box<dyn Error>> {

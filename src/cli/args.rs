@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use crate::{State, Mode};
+use crate::{State, Mode, ListOp};
 use std::path::PathBuf;
 
 const DEFAULT_SPEC: &str = ".conftool.json";
@@ -46,11 +46,11 @@ pub fn parse() -> Result<State, ()> {
         }
     };
 
-    let mode: Option<Mode> = match &args.subcmd {
+    let mode: Option<Mode> = match args.subcmd {
         Some(Subcommands::List { show }) => {
             match show {
-                Some(show) => Some(Mode::List { show: String::from(show) }),
-                None => None
+                Some(show) => Some(Mode::List { op: ListOp::Show(show) }),
+                None => { panic!("Invalid submode"); }
             }
         },
         None => None
