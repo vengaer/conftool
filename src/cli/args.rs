@@ -35,7 +35,7 @@ enum Subcommands {
     }
 }
 
-pub fn parse() -> Option<State> {
+pub fn parse() -> Result<State, ()> {
     let args = CliArgs::parse();
 
     let verbosity = match args.verbose {
@@ -57,10 +57,10 @@ pub fn parse() -> Option<State> {
     };
 
     if let None = mode {
-        return None;
+        return Err(());
     }
 
-    Some(State {
+    Ok(State {
         spec: match args.specification {
             Some(spec) => PathBuf::from(spec),
             None => PathBuf::from(DEFAULT_SPEC)

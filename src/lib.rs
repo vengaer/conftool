@@ -8,6 +8,7 @@ use std::path::PathBuf;
 
 /// Command line management
 pub mod cli;
+pub mod parser;
 
 #[derive(Debug)]
 pub struct State {
