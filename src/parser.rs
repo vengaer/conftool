@@ -2,7 +2,7 @@ use serde::Deserialize;
 use serde_json::Value;
 use std::error;
 use std::fs;
-use std::path::PathBuf;
+use std::path;
 use crate::{ConfigEntry,EntryType,Switch};
 
 #[derive(Debug, Deserialize)]
@@ -26,7 +26,7 @@ struct ParseSequence {
     entries: Vec<ParseEntry>
 }
 
-pub fn parse_spec(path: &PathBuf) -> Result<Vec<ConfigEntry>, Box<dyn error::Error>> {
+pub fn parse_spec(path: &path::PathBuf) -> Result<Vec<ConfigEntry>, Box<dyn error::Error>> {
     let contents = fs::read_to_string(path)?;
 
     let json: ParseSequence = serde_json::from_str(&contents)?;

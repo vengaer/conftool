@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand};
 use crate::{State, Mode, ListOp};
 use std::error;
-use std::path::PathBuf;
+use std::path;
 
 const DEFAULT_SPEC: &str = ".conftool.json";
 const DEFAULT_CONFIG: &str = ".config";
@@ -72,12 +72,12 @@ pub fn parse() -> Result<State, Box<dyn error::Error>> {
 
     Ok(State {
         spec: match args.specification {
-            Some(spec) => PathBuf::from(spec),
-            None => PathBuf::from(DEFAULT_SPEC)
+            Some(spec) => path::PathBuf::from(spec),
+            None => path::PathBuf::from(DEFAULT_SPEC)
         },
         config : match args.config {
-            Some(cfg) => PathBuf::from(cfg),
-            None => PathBuf::from(DEFAULT_CONFIG)
+            Some(cfg) => path::PathBuf::from(cfg),
+            None => path::PathBuf::from(DEFAULT_CONFIG)
         },
         verbosity,
         mode: mode.unwrap()

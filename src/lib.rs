@@ -5,7 +5,7 @@
 )]
 
 pub use crate::list::ListOp;
-use std::path::PathBuf;
+use std::path;
 use std::fmt;
 use serde::{Deserialize};
 
@@ -19,10 +19,10 @@ pub mod parser;
 #[derive(Debug)]
 pub struct State {
     /// Path to config specification
-    pub spec: PathBuf,
+    pub spec: path::PathBuf,
 
     /// Path to config file
-    pub config: PathBuf,
+    pub config: path::PathBuf,
 
     /// Verbosity level
     pub verbosity: usize,
