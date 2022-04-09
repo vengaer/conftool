@@ -104,6 +104,13 @@ impl fmt::Display for ConfigEntry {
                 _ => write!(f, "Any {}\n", enttype)?
             }
         };
+        let default = match &self.enttype {
+            EntryType::Switch(Switch::Yes) => "y".to_string(),
+            EntryType::Switch(Switch::No) => "n".to_string(),
+            EntryType::String(s) => s.to_string(),
+            EntryType::Int(i) => i.to_string()
+        };
+        write!(f, "  default: {}\n", default)?;
         write!(f, "  help: {}", self.help)?;
         Ok(())
     }
