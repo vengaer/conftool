@@ -7,7 +7,7 @@
 pub use crate::list::ListOp;
 use std::path;
 use std::fmt;
-use serde::{Deserialize};
+use serde;
 
 /// Command line management
 pub mod cli;
@@ -40,7 +40,7 @@ pub enum Mode {
     }
 }
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, serde::Deserialize, PartialEq)]
 pub enum EntryType {
     Switch(Switch),
     String(String),
@@ -56,7 +56,7 @@ pub struct ConfigEntry {
     pub help: String
 }
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, serde::Deserialize, PartialEq)]
 pub enum Switch {
     Yes,
     No

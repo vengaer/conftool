@@ -1,11 +1,11 @@
-use serde::Deserialize;
-use serde_json::Value;
+use serde;
+use serde_json;
 use std::error;
 use std::fs;
 use std::path;
 use crate::{ConfigEntry,EntryType,Switch};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, serde::Deserialize)]
 struct ParseEntry {
     /// Name of the entry
     name: String,
@@ -16,12 +16,12 @@ struct ParseEntry {
     /// Optional set of choices
     choices: Option<Vec<String>>,
     /// Default value
-    default: Value,
+    default: serde_json::Value,
     /// Help string
     help: String
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, serde::Deserialize)]
 struct ParseSequence {
     entries: Vec<ParseEntry>
 }
@@ -34,11 +34,11 @@ pub fn parse_spec(path: &path::PathBuf) -> Result<Vec<ConfigEntry>, Box<dyn erro
     let mut entries: Vec<ConfigEntry> = Vec::with_capacity(json.entries.len());
     for ent in json.entries {
         let defstr = match &ent.default {
-            Value::String(str) => Some(str),
+            serde_json::Value::String(str) => Some(str),
             _ => None
         };
         let defi32 = match &ent.default {
-            Value::Number(i) => Some(i.as_i64().unwrap() as i32),
+            serde_json::Value::Number(i) => Some(i.as_i64().unwrap() as i32),
             _ => None
         };
         let enttype = match ent.entrytype.as_str() {
