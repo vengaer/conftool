@@ -1,6 +1,6 @@
 use serde::Deserialize;
 use serde_json::Value;
-use std::error::Error;
+use std::error;
 use std::fs;
 use std::path::PathBuf;
 use crate::{ConfigEntry,EntryType,Switch};
@@ -26,7 +26,7 @@ struct ParseSequence {
     entries: Vec<ParseEntry>
 }
 
-pub fn parse_spec(path: &PathBuf) -> Result<Vec<ConfigEntry>, Box<dyn Error>> {
+pub fn parse_spec(path: &PathBuf) -> Result<Vec<ConfigEntry>, Box<dyn error::Error>> {
     let contents = fs::read_to_string(path)?;
 
     let json: ParseSequence = serde_json::from_str(&contents)?;
@@ -47,9 +47,9 @@ pub fn parse_spec(path: &PathBuf) -> Result<Vec<ConfigEntry>, Box<dyn Error>> {
             "switch" => match defstr.unwrap().as_str() {
                 "y" => EntryType::Switch(Switch::Yes),
                 "n" => EntryType::Switch(Switch::No),
-                _ => { panic!("Invalid switch default {}", defstr.unwrap()); }
+                _ => return Err(format!("Invalid switch default {}", defstr.unwrap()).into())
             }
-            _ => { panic!("Invalid entry type {}", ent.entrytype); }
+            _ => return Err(format!("Invalid entry type {}", ent.entrytype).into())
         };
         let entry = ConfigEntry {
             name: ent.name,

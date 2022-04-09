@@ -1,5 +1,6 @@
 use clap::{Parser, Subcommand};
 use crate::{State, Mode, ListOp};
+use std::error;
 use std::path::PathBuf;
 
 const DEFAULT_SPEC: &str = ".conftool.json";
@@ -31,11 +32,15 @@ enum Subcommands {
     List {
         /// Show information regarding configuration option
         #[clap(short, long, value_name = "OPTION")]
-        show: Option<String>
+        show: Option<String>,
+
+        /// Show information about all options
+        #[clap(short, long)]
+        all: bool
     }
 }
 
-pub fn parse() -> Result<State, ()> {
+pub fn parse() -> Result<State, Box<dyn error::Error>> {
     let args = CliArgs::parse();
 
     let verbosity = match args.verbose {
@@ -46,18 +51,23 @@ pub fn parse() -> Result<State, ()> {
         }
     };
 
-    let mode: Option<Mode> = match args.subcmd {
-        Some(Subcommands::List { show }) => {
-            match show {
-                Some(show) => Some(Mode::List { op: ListOp::Show(show) }),
-                None => { panic!("Invalid submode"); }
+    let mode = match args.subcmd {
+        Some(Subcommands::List { show, all }) => {
+            if all {
+                Some(Mode::List { op: ListOp::All })
+            }
+            else if let Some(show) = show {
+                Some(Mode::List { op: ListOp::Show(show) })
+            }
+            else {
+                None
             }
         },
         None => None
     };
 
     if let None = mode {
-        return Err(());
+        return Err("No submode specified".into());
     }
 
     Ok(State {

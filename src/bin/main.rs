@@ -1,7 +1,6 @@
 use conftool::{cli,parser,list,Mode,ListOp};
 use std::process::exit;
 
-// TODO: parsing of config value options is broken
 fn main() {
     let state = cli::args::parse().expect("Invalid arguments, try --help");
 
@@ -25,6 +24,9 @@ fn main() {
             match op {
                 ListOp::Show(option) => {
                     list::show(&option, &entries).unwrap()
+                },
+                ListOp::All => {
+                    list::show_all(&entries)
                 }
             }
         }
