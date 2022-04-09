@@ -1,0 +1,24 @@
+image: archlinux:latest
+
+before_script:
+  - pacman -Syu --needed --noconfirm rust
+
+stages:
+  - build
+  - test
+  - doc
+
+build_bin:
+  stage: build
+  script:
+    - cargo build --release
+
+check:
+  stage: test
+  script:
+    - cargo test
+
+docs:
+  stage: doc
+  script:
+    - cargo doc
