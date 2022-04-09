@@ -49,7 +49,7 @@ enum Subcommands {
     }
 }
 
-pub fn parse() -> Result<State, Box<dyn error::Error>> {
+pub fn parse_args() -> Result<State, Box<dyn error::Error>> {
     let args = CliArgs::parse();
 
     let verbosity = match args.verbose {

@@ -2,7 +2,7 @@ use conftool::{cli,parser,list,Mode,ListOp};
 use std::process::exit;
 
 fn main() {
-    let state = cli::args::parse().expect("Invalid arguments, try --help");
+    let state = cli::parse_args().expect("Invalid arguments, try --help");
 
     if !state.spec.exists() {
         eprintln!("Specification {} does not exist", state.spec.display());
