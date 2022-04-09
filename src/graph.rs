@@ -174,7 +174,7 @@ where
         let mut deps: Vec<T> = Vec::with_capacity(16);
 
         loop {
-            if to_traverse.len() == 0 as usize {
+            if to_traverse.len() == 0usize {
                 break;
             }
             let vert = &self.vertices[to_traverse.pop().unwrap()];
@@ -275,11 +275,11 @@ mod tests {
         let deps = graph.dependencies_of(&opts[0])?;
         assert_eq!(deps, &[opts[1]]);
         let deps = graph.dependencies_of(&opts[1])?;
-        assert_eq!(deps.len(), 0 as usize);
+        assert_eq!(deps.len(), 0usize);
         let deps = graph.dependencies_of(&opts[2])?;
         assert_eq!(deps, &[opts[3]]);
         let deps = graph.dependencies_of(&opts[3])?;
-        assert_eq!(deps.len(), 0 as usize);
+        assert_eq!(deps.len(), 0usize);
         Ok(())
     }
 

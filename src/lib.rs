@@ -36,18 +36,18 @@ pub struct State {
 #[derive(Debug)]
 pub enum Mode {
     List {
-        op: ListOp
+        ops: Vec<ListOp>
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, PartialEq)]
 pub enum EntryType {
     Switch(Switch),
     String(String),
     Int(i32)
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct ConfigEntry {
     pub name: String,
     pub depends: Vec<String>,
@@ -56,7 +56,7 @@ pub struct ConfigEntry {
     pub help: String
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, PartialEq)]
 pub enum Switch {
     Yes,
     No

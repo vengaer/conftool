@@ -8,7 +8,12 @@ const DEFAULT_CONFIG: &str = ".config";
 const MAX_VERBOSITY: usize = 3;
 
 #[derive(Parser, Debug)]
-#[clap(author, version, about, long_about = None)]
+#[clap(
+    author = "Vilhelm Engström",
+    version = "0.1.0",
+    about = "Simple dependency handling in config files",
+    long_about = None
+)]
 struct CliArgs {
     /// Path to config specification, optional
     #[clap(short, long, value_name = "SPECIFICATION")]
@@ -36,7 +41,11 @@ enum Subcommands {
 
         /// Show information about all options
         #[clap(short, long)]
-        all: bool
+        all: bool,
+
+        /// List dependencies of option, including indirect ones
+        #[clap(short, long = "dependencies", value_name = "OPTION")]
+        deps: Option<String>
     }
 }
 
@@ -52,21 +61,29 @@ pub fn parse() -> Result<State, Box<dyn error::Error>> {
     };
 
     let mode = match args.subcmd {
-        Some(Subcommands::List { show, all }) => {
+        Some(Subcommands::List { show, all, deps }) => {
             if all {
-                Some(Mode::List { op: ListOp::All })
-            }
-            else if let Some(show) = show {
-                Some(Mode::List { op: ListOp::Show(show) })
+                Some(Mode::List { ops: vec![ListOp::All] })
             }
             else {
-                None
+                match (&show, &deps) {
+                    (None, None) => None,
+                    _ => {
+                        let mut ops = vec![];
+                        if !show.is_none() {
+                            ops.push(ListOp::Show(show.unwrap()));
+                        }
+                        if !deps.is_none() {
+                            ops.push(ListOp::Dependencies(deps.unwrap()));
+                        }
+                        Some(Mode::List { ops })
+                    }
+                }
             }
-        },
+        }
         None => None
     };
-
-    if let None = mode {
+    if mode.is_none() {
         return Err("No submode specified".into());
     }
 
