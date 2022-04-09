@@ -1,4 +1,4 @@
-use serde::{Deserialize};
+use serde::Deserialize;
 use serde_json::Value;
 use std::error::Error;
 use std::fs;
@@ -13,7 +13,7 @@ struct ParseEntry {
     depends: Vec<String>,
     /// Entry type and optional default value
     entrytype: String,
-    /// Optional set of chioces
+    /// Optional set of choices
     choices: Option<Vec<String>>,
     /// Default value
     default: Value,
@@ -52,11 +52,10 @@ pub fn parse_spec(path: &PathBuf) -> Result<Vec<ConfigEntry>, Box<dyn Error>> {
             _ => { panic!("Invalid entry type {}", ent.entrytype); }
         };
         let entry = ConfigEntry {
-
             name: ent.name,
             depends: ent.depends,
             enttype: enttype,
-            choices: None,
+            choices: ent.choices,
             help: ent.help
         };
         entries.push(entry)

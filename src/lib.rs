@@ -50,7 +50,7 @@ pub struct ConfigEntry {
     pub name: String,
     pub depends: Vec<String>,
     pub enttype: EntryType,
-    pub choices: Option<Vec<EntryType>>,
+    pub choices: Option<Vec<String>>,
     pub help: String
 }
 
