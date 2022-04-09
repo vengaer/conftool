@@ -1,6 +1,7 @@
 use conftool::{cli,parser,list,Mode,ListOp};
 use std::process::exit;
 
+// TODO: parsing of config value options is broken
 fn main() {
     let state = cli::args::parse().expect("Invalid arguments, try --help");
 
@@ -11,7 +12,7 @@ fn main() {
 
     if let Ok(mut cbuf) = state.config.clone().canonicalize() {
         cbuf.pop();
-        if cbuf.pop() && !cbuf.exists() {
+        if !cbuf.exists() {
             eprintln!("Cannot create config in non-existent directory {}", cbuf.display());
             exit(1);
         }
