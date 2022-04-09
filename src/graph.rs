@@ -170,10 +170,7 @@ where
         let mut traversed: Vec<usize> = Vec::with_capacity(16);
         let mut deps: Vec<T> = Vec::with_capacity(16);
 
-        loop {
-            if to_traverse.len() == 0usize {
-                break;
-            }
+        while to_traverse.len() != 0usize {
             let vert = &self.vertices[to_traverse.pop().unwrap()];
             let unique: Vec<usize> = vert.parents
                             .iter()
