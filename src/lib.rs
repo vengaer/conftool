@@ -11,6 +11,8 @@ use serde::{Deserialize};
 
 /// Command line management
 pub mod cli;
+/// Dependency graph
+pub mod graph;
 /// Functions related to list subcommand
 pub mod list;
 /// Json and config parsing
