@@ -53,10 +53,7 @@ where
     }
 
     fn is_unique(&self, value: &T) -> bool {
-        match self.vertices.iter().find(|&x| *value == x.value) {
-            Some(_) => false,
-            None => true
-        }
+        self.vertices.iter().find(|&x| *value == x.value).is_none()
     }
 
     fn find_parent_vertices(&self, depends: &[T]) -> Vec<Parent<T>> {
