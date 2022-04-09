@@ -48,6 +48,13 @@ where
     Ok(())
 }
 
+fn is_integer<T>(s: &T) -> bool
+where
+    T: AsRef<str>
+{
+    Regex::new(r"^\d+$").unwrap().is_match(s.as_ref())
+}
+
 fn validate_values<T>(kvpairs: &[(T, T)], entries: &[ConfigEntry]) -> Result<(), Box<dyn error::Error>>
 where
     T: AsRef<str> + fmt::Display
@@ -71,7 +78,15 @@ where
             }
         };
 
-        if choices.iter().find(|o| *o == &value.as_ref()).is_none() {
+        if choices.len() == 0usize {
+            if let EntryType::Int(_) = ent.enttype {
+                if !is_integer(value) {
+                    eprintln!("Invalid value '{}' for integral option '{}'", value, option);
+                    valid = false;
+                }
+            }
+        }
+        else if choices.iter().find(|o| *o == &value.as_ref()).is_none() {
             eprintln!("Invalid value '{}' for option '{}'", value, option);
             valid = false;
         }
