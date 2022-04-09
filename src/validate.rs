@@ -8,12 +8,11 @@ fn validate_line_format<T>(lines: &[T]) -> Result<(), Box<dyn error::Error>>
 where
     T: AsRef<str> + fmt::Display + ToString + fmt::Debug
 {
-    let re = Regex::new(r"^\s*([A-Za-z0-9_-]+\s*=\s*[^ ]+)?$").unwrap();
+    let re = Regex::new(r"^\s*([A-Za-z0-9_-]+\s*=.*)?$").unwrap();
     let mut lineno = 0u32;
     let mut valid = true;
     for line in lines {
         lineno += 1;
-
         if !re.is_match(&line.to_string()) {
             eprintln!("Syntax error on line {}: {}", lineno, line);
             valid = false;
