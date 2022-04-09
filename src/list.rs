@@ -30,11 +30,10 @@ pub fn dependencies(option: &str, entries: &[ConfigEntry]) -> Result<(), Box<dyn
     let mut graph: Graph<&str> = Graph::new();
     for ent in entries {
         graph.insert(&ent.name, &ent.depends
-                                    .iter()
-                                    .map(|s| s.as_str())
-                                    .collect::<Vec<&str>>())?;
+                .iter()
+                .map(|s| s.as_str())
+                .collect::<Vec<&str>>())?;
     }
-
     let deps = graph.dependencies_of(&option)?;
     println!("{}:", option);
     if deps.len() == 0usize {

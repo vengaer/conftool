@@ -17,6 +17,8 @@ pub mod graph;
 pub mod list;
 /// Json and config parsing
 pub mod parser;
+/// Validation of existing config
+pub mod validate;
 
 #[derive(Debug)]
 pub struct State {
@@ -37,17 +39,18 @@ pub struct State {
 pub enum Mode {
     List {
         ops: Vec<ListOp>
-    }
+    },
+    Validate
 }
 
-#[derive(Debug, serde::Deserialize, PartialEq)]
+#[derive(Debug, serde::Deserialize, PartialEq, Clone)]
 pub enum EntryType {
     Switch(Switch),
     String(String),
     Int(i32)
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct ConfigEntry {
     pub name: String,
     pub depends: Vec<String>,
@@ -56,7 +59,7 @@ pub struct ConfigEntry {
     pub help: String
 }
 
-#[derive(Debug, serde::Deserialize, PartialEq)]
+#[derive(Debug, serde::Deserialize, PartialEq, Clone)]
 pub enum Switch {
     Yes,
     No

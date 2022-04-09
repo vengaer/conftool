@@ -1,8 +1,14 @@
-use conftool::{cli,parser,list,Mode,ListOp};
+use conftool::{cli,parser,list,validate,Mode,ListOp};
 use std::process;
 
 fn main() {
-    let state = cli::parse_args().expect("Invalid arguments, try --help");
+    let state = match cli::parse_args() {
+        Ok(state) => state,
+        Err(err) => {
+            eprintln!("{}", err);
+            process::exit(1);
+        }
+    };
 
     if !state.spec.exists() {
         eprintln!("Specification {} does not exist", state.spec.display());
@@ -18,22 +24,33 @@ fn main() {
     }
 
     let entries = parser::parse_spec(&state.spec).unwrap();
-
-    match state.mode {
-        Mode::List { ops } => {
-            for op in ops {
-                match op {
-                    ListOp::Show(option) => {
-                        list::show(&option, &entries).unwrap()
-                    },
+    let res = match state.mode {
+        Mode::List { mut ops } => {
+            loop {
+                let op = match ops.pop() {
+                    Some(op) => op,
+                    None => break Ok(())
+                };
+                let res = match op {
+                    ListOp::Show(option) => list::show(&option, &entries),
                     ListOp::All => {
-                        list::show_all(&entries)
+                        list::show_all(&entries);
+                        Ok(())
                     },
-                    ListOp::Dependencies(option) => {
-                        list::dependencies(&option, &entries).unwrap()
-                    }
+                    ListOp::Dependencies(option) => list::dependencies(&option, &entries)
+                };
+                if res.is_err() {
+                    break res;
                 }
             }
+        },
+        Mode::Validate => {
+            validate::validate_config(&state.config, &entries)
         }
+    };
+
+    if let Err(err) = res {
+        eprintln!("{}", err);
+        process::exit(1);
     }
 }

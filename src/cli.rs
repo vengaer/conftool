@@ -46,7 +46,9 @@ enum Subcommands {
         /// List dependencies of option, including indirect ones
         #[clap(short, long = "dependencies", value_name = "OPTION")]
         deps: Option<String>
-    }
+    },
+    /// Validate config file
+    Validate
 }
 
 pub fn parse_args() -> Result<State, Box<dyn error::Error>> {
@@ -81,6 +83,7 @@ pub fn parse_args() -> Result<State, Box<dyn error::Error>> {
                 }
             }
         }
+        Some(Subcommands::Validate) => Some(Mode::Validate),
         None => None
     };
     if mode.is_none() {
