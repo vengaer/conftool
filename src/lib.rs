@@ -40,7 +40,10 @@ pub enum Mode {
     List {
         ops: Vec<ListOp>
     },
-    Validate
+    Validate,
+    Set {
+        option: String
+    }
 }
 
 #[derive(Debug, serde::Deserialize, PartialEq, Clone)]

@@ -46,6 +46,10 @@ fn main() {
         },
         Mode::Validate => {
             validate::validate_config(&state.config, &entries)
+        },
+        Mode::Set { option } => {
+            /* TODO */
+            Ok(())
         }
     };
 

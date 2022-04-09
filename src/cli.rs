@@ -48,7 +48,13 @@ enum Subcommands {
         deps: Option<String>
     },
     /// Validate config file
-    Validate
+    Validate,
+    /// Set config options
+    Set {
+        /// Set a specific option, automatically enables dependencies
+        #[clap(short, long, value_name = "OPTION")]
+        option: Option<String>
+    }
 }
 
 pub fn parse_args() -> Result<State, Box<dyn error::Error>> {
@@ -84,6 +90,12 @@ pub fn parse_args() -> Result<State, Box<dyn error::Error>> {
             }
         }
         Some(Subcommands::Validate) => Some(Mode::Validate),
+        Some(Subcommands::Set { option }) => {
+            match option {
+                Some(option) => Some(Mode::Set { option }),
+                _ => None
+            }
+        },
         None => None
     };
     if mode.is_none() {
