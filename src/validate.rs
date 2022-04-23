@@ -190,7 +190,6 @@ where
 }
 
 pub fn validate_config(path: &path::PathBuf, entries: &[ConfigEntry]) -> Result<(), Box<dyn error::Error>> {
-    let mut graph: Graph<&str, state::Incomplete> = Graph::new();
     let lines: Vec<String> = fs::read_to_string(path)?
                                 .split("\n")
                                 .map(|s| s.to_owned())
@@ -208,13 +207,7 @@ pub fn validate_config(path: &path::PathBuf, entries: &[ConfigEntry]) -> Result<
     validate_options(&kvpairs, &entries)?;
     validate_values(&kvpairs, &entries)?;
 
-    for ent in entries {
-        graph.insert(&ent.name, &ent.depends
-                .iter()
-                .map(|s| s.as_str())
-                .collect::<Vec<&str>>())?;
-    }
-
+    let graph = Graph::<&str, state::Incomplete>::from(entries);
     let graph = graph.into_complete()?;
     check_dependencies(&graph, &kvpairs)?;
     Ok(())

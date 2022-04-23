@@ -1,6 +1,6 @@
 use core::fmt;
-use std::error;
-use std::marker;
+use std::{convert, error, marker};
+use crate::ConfigEntry;
 
 #[derive(Debug)]
 enum Parent<T> {
@@ -211,6 +211,20 @@ where
             traversed.extend_from_slice(unique.as_slice());
         }
         Ok(deps)
+    }
+}
+
+impl<'a> convert::From<&'a [ConfigEntry]> for Graph<&'a str, state::Incomplete> {
+    fn from(entries: &'a [ConfigEntry]) -> Self {
+        let mut graph: Graph<&str, state::Incomplete> = Graph::new();
+        for ent in entries {
+            graph.insert(&ent.name, &ent.depends
+                    .iter()
+                    .map(|s| s.as_str())
+                    .collect::<Vec<&str>>())
+                    .unwrap();
+        }
+        graph
     }
 }
 
