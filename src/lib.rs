@@ -5,8 +5,7 @@
 )]
 
 pub use crate::list::ListOp;
-use std::path;
-use std::fmt;
+use std::{error, fmt, path};
 use serde;
 
 /// Command line management
@@ -83,6 +82,32 @@ pub struct ConfigEntry {
     pub enttype: EntryType,
     pub choices: Option<display_vec::DisplayVec<String>>,
     pub help: String
+}
+
+impl ConfigEntry {
+    pub fn default_value(&self) -> String {
+        match &self.enttype {
+            EntryType::Switch(Switch::Yes) => "y".to_string(),
+            EntryType::Switch(Switch::No) => "n".to_string(),
+            EntryType::String(default) => default.clone(),
+            EntryType::Int(int) => int.to_string()
+        }
+    }
+
+    pub fn is_switch(&self) -> bool {
+        match &self.enttype {
+            EntryType::Switch(_) => true,
+            _ => false
+        }
+    }
+
+    pub fn is_enabled_by_default(&self) -> Result<bool, Box<dyn error::Error>> {
+        match &self.enttype {
+            EntryType::Switch(Switch::Yes) => Ok(true),
+            EntryType::Switch(Switch::No) => Ok(false),
+            _ =>Err(format!("Non-switch option {} cannot be enabled", self.name).into())
+        }
+    }
 }
 
 #[derive(Debug, serde::Deserialize, PartialEq, Clone)]
