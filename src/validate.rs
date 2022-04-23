@@ -1,7 +1,7 @@
-use crate::{parse, ConfigEntry, EntryType};
+use crate::{display_vec, parse, ConfigEntry, EntryType};
 use crate::graph::{state, Graph};
 use regex::Regex;
-use std::{collections,hash,error,fmt,fs,ops,path};
+use std::{collections,hash,error,fmt,fs,path};
 
 
 fn validate_line_format<T>(lines: &[T]) -> Result<(), Box<dyn error::Error>>
@@ -115,38 +115,6 @@ impl fmt::Display for Cause {
     }
 }
 
-#[derive(Debug)]
-struct DisplayVec<T>(Vec<T>);
-
-impl<T> ops::Deref for DisplayVec<T> {
-    type Target = Vec<T>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl<T> fmt::Display for DisplayVec<T>
-where
-    T: fmt::Display
-{
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if let Some((last, rest)) = self.split_last() {
-            for elem in rest {
-                write!(f, "{}, ", elem)?;
-            }
-            write!(f, "{}", last)?;
-        }
-        Ok(())
-    }
-}
-
-impl<T> From<Vec<T>> for DisplayVec<T> {
-    fn from(v: Vec<T>) -> Self {
-        DisplayVec(v)
-    }
-}
-
 fn check_dependencies<T>(graph: &Graph<T, state::Complete>, kvpairs: &[(T, T)]) -> Result<(), Box<dyn error::Error>>
 where
     T: AsRef<str> + fmt::Debug + fmt::Display + Clone +
@@ -180,7 +148,7 @@ where
 
     if missing.len() > 0usize {
         for (dep, (cause, opts)) in missing {
-            let opts = DisplayVec(opts);
+            let opts = display_vec::DisplayVec(opts);
             eprintln!("Dependency {} required by {} {}", dep, opts, cause);
         }
         return Err("Errors encountered when evaluating dependencies".into());

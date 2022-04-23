@@ -3,7 +3,7 @@ use serde_json;
 use std::error;
 use std::fs;
 use std::path;
-use crate::{ConfigEntry,EntryType,Switch};
+use crate::{display_vec, ConfigEntry, EntryType, Switch};
 
 #[derive(Debug, serde::Deserialize)]
 struct ParseEntry {
@@ -53,9 +53,12 @@ pub fn parse_spec(path: &path::PathBuf) -> Result<Vec<ConfigEntry>, Box<dyn erro
         };
         let entry = ConfigEntry {
             name: ent.name,
-            depends: ent.depends,
+            depends: display_vec::DisplayVec::from(ent.depends),
             enttype: enttype,
-            choices: ent.choices,
+            choices: match  ent.choices {
+                Some(choices) => Some(display_vec::DisplayVec::from(choices)),
+                None => None
+            },
             help: ent.help
         };
         entries.push(entry)
