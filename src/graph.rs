@@ -353,4 +353,48 @@ mod tests {
         let mut graph: Graph<&str, state::Incomplete> = Graph::new();
         assert!(graph.insert(&"CONFIG_TEST", &[&"CONFIG_ANOTHER", &"CONFIG_ANOTHER"]).is_err());
     }
+
+    #[test]
+    fn single_dependent_node_found() -> Result<(), Box<dyn error::Error>> {
+        let mut graph: Graph<&str, state::Incomplete> = Graph::new();
+        graph.insert(&"CONFIG_PARENT", &[])?;
+        graph.insert(&"CONFIG_CHILD", &["CONFIG_PARENT"])?;
+        let graph = graph.into_complete()?;
+        let dependent = graph.dependent_vertices(&"CONFIG_PARENT")?;
+        assert_eq!(dependent.len(), 1);
+        assert_eq!(dependent[0], "CONFIG_CHILD");
+        Ok(())
+    }
+
+    #[test]
+    fn deep_dependent_chain() -> Result<(), Box<dyn error::Error>> {
+        let mut graph: Graph<&str, state::Incomplete> = Graph::new();
+        let opts = ["CONFIG0", "CONFIG1", "CONFIG2", "CONFIG3"];
+        if let Some((last, rest)) = opts.split_last() {
+            for (i, opt) in rest.iter().enumerate() {
+                graph.insert(&opt, &[&opts[i + 1]])?;
+            }
+            graph.insert(&last, &[])?;
+        }
+        let graph = graph.into_complete()?;
+        let mut dependent = graph.dependent_vertices(&"CONFIG3")?;
+        dependent.sort();
+        assert_eq!(dependent, &opts[..opts.len() - 1]);
+        Ok(())
+    }
+
+    #[test]
+    fn multiple_independent_children() -> Result<(), Box<dyn error::Error>> {
+        let mut graph: Graph<&str, state::Incomplete> = Graph::new();
+        let opts = ["CONFIG_CHILD0", "CONFIG_CHILD1", "CONFIG_CHILD2"];
+        graph.insert(&"CONFIG_PARENT", &[])?;
+        for opt in opts {
+            graph.insert(&opt, &[&"CONFIG_PARENT"])?;
+        }
+        let graph = graph.into_complete()?;
+        let mut dependent = graph.dependent_vertices(&"CONFIG_PARENT")?;
+        dependent.sort();
+        assert_eq!(dependent, opts);
+        Ok(())
+    }
 }
