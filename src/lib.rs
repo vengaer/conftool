@@ -50,6 +50,10 @@ pub enum Mode {
     },
     Disable {
         option: String
+    },
+    Set {
+        option: String,
+        value: String
     }
 }
 

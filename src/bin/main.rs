@@ -46,7 +46,8 @@ fn main() {
         },
         Mode::Validate => validate::validate_config(&state.config, &entries),
         Mode::Enable { option } => manipulate::enable(&option, &state.config, &entries),
-        Mode::Disable { option } => manipulate::disable(&option, &state.config, &entries)
+        Mode::Disable { option } => manipulate::disable(&option, &state.config, &entries),
+        Mode::Set { option, value } => manipulate::set(&option, &value, &state.config, &entries)
     };
 
     if let Err(err) = res {

@@ -58,6 +58,13 @@ enum Subcommands {
     Disable {
         /// Option to disable
         option: String
+    },
+    /// Set config option
+    Set {
+        /// The option to set
+        option: String,
+        /// The value to assign the option
+        value: String
     }
 }
 
@@ -96,6 +103,7 @@ pub fn parse_args() -> Result<State, Box<dyn error::Error>> {
         Some(Subcommands::Validate) => Some(Mode::Validate),
         Some(Subcommands::Enable { option }) => Some(Mode::Enable { option }),
         Some(Subcommands::Disable { option }) => Some(Mode::Disable { option }),
+        Some(Subcommands::Set { option, value }) => Some(Mode::Set { option, value }),
         None => None
     };
     if mode.is_none() {

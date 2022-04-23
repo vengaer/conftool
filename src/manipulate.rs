@@ -1,3 +1,4 @@
+use regex::Regex;
 use std::{error, fs, path};
 use std::io::Write;
 use crate::{parse, ConfigEntry, EntryType, Switch};
@@ -77,5 +78,62 @@ pub fn enable(opt: &str, path: &path::PathBuf, entries: &[ConfigEntry]) -> Resul
 pub fn disable(opt: &str, path: &path::PathBuf, entries: &[ConfigEntry]) -> Result<(), Box<dyn error::Error>> {
     let mut kvpairs = parse::parse_config(path, None)?;
     set_switch(opt, Switch::No, &mut kvpairs, &entries)?;
+    write_config(&kvpairs, path)
+}
+
+fn is_integer(s: &str) -> bool {
+    return Regex::new(r"^\s*[0-9]+\s*$").unwrap()
+                                        .is_match(s);
+}
+
+fn validate_value(opt: &str, value: &str, ent: &ConfigEntry) -> Result<(), Box<dyn error::Error>> {
+    match ent.enttype {
+        EntryType::Switch(_) => {
+            if value != "y" && value != "n" {
+                return Err(format!("Invalid value \"{}\" for switch \"{}\"", value, opt).into());
+            }
+        },
+        EntryType::String(_) => (),
+        EntryType::Int(_) => {
+            if !is_integer(&value) {
+                return Err(format!("Invalid value \"{}\" for integer \"{}\"", value, opt).into());
+            }
+        }
+    };
+
+    if let Some(choices) = &ent.choices {
+        if choices.iter().find(|v| v == &value).is_none() {
+            return Err(format!("Invalid choice \"{}\" for option \"{}\"\nValid options are {:?}",
+                               value, opt, choices).into());
+        }
+    }
+    Ok(())
+}
+
+pub fn set(opt: &str, value: &str, path: &path::PathBuf, entries: &[ConfigEntry]) -> Result<(), Box<dyn error::Error>> {
+    let ent = match entries.iter().find(|e| e.name == opt) {
+        Some(ent) => ent,
+        None => return Err(format!("Invalid config option \"{}\"", opt).into())
+    };
+    let value = value.trim();
+    validate_value(opt, value, &ent)?;
+
+    let deps_required = match ent.enttype {
+        EntryType::Switch(_) => value != "n",
+        _ => true
+    };
+
+    let mut kvpairs = parse::parse_config(path, None)?;
+    if deps_required {
+        enable_deps(opt, &mut kvpairs, &entries)?;
+    }
+
+    if let Some((_, v)) = kvpairs.iter_mut().find(|(k, _)| k == opt) {
+        *v = value.to_string();
+    }
+    else {
+        kvpairs.push((opt.to_string(), value.to_string()));
+    }
+
     write_config(&kvpairs, path)
 }
