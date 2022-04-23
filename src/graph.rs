@@ -1,5 +1,6 @@
 use core::fmt;
 use std::error;
+use std::marker;
 
 #[derive(Debug)]
 enum Parent<T> {
@@ -39,17 +40,25 @@ where
 { }
 
 #[derive(Debug)]
-pub struct Graph<T> {
+pub struct Graph<T, COMPLETE> {
     /// Graph vertices
     vertices: Vec<Vertex<T>>,
+    phantom: marker::PhantomData<COMPLETE>
 }
 
-impl<T> Graph<T>
+pub mod state {
+    #[derive(Debug)]
+    pub struct Incomplete;
+    #[derive(Debug)]
+    pub struct Complete;
+}
+
+impl<T> Graph<T, state::Incomplete>
 where
     T: fmt::Debug + Clone + PartialEq
 {
     pub fn new() -> Self {
-        Graph { vertices: Vec::with_capacity(32) }
+        Graph { vertices: Vec::with_capacity(32), phantom: marker::PhantomData }
     }
 
     fn is_unique(&self, value: &T) -> bool {
@@ -123,7 +132,7 @@ where
     ///               contain duplicates or `value`.
     ///
     pub fn insert(&mut self, value: T, depends: &[T]) -> Result<(), Box<dyn error::Error>> {
-        if Graph::<T>::contains_duplicates(depends) {
+        if Graph::<T, state::Incomplete>::contains_duplicates(depends) {
             return Err(format!("Dependencies {:?} contains duplicates", depends).into());
         }
         if !self.is_unique(&value) {
@@ -156,11 +165,21 @@ where
             .is_none()
     }
 
+    pub fn into_complete(self) -> Result<Graph<T, state::Complete>, Box<dyn error::Error>> {
+        if !self.is_complete() {
+            return Err("Cannot complete graph with non-connected edges".into())
+        }
+
+        Ok(Graph { vertices: self.vertices, phantom: marker::PhantomData })
+    }
+}
+
+impl<T> Graph<T, state::Complete>
+where
+    T: fmt::Debug + Clone + PartialEq
+{
     /// Return a list of dependencies for the supplied value
     pub fn dependencies_of(&self, value: &T) -> Result<Vec<T>, Box<dyn error::Error>> {
-        if !self.is_complete() {
-            return Err("Cannot search incomplete graph".into());
-        }
         let vert = match self.vertices.iter().position(|v| v.value == *value) {
             Some(vert) => vert,
             None => return Err(format!("No vertex matches {:?}", value).into())
@@ -201,9 +220,10 @@ mod tests {
 
     #[test]
     fn single_dependency() -> Result<(), Box<dyn error::Error>> {
-        let mut graph: Graph<&str> = Graph::new();
+        let mut graph: Graph<&str, state::Incomplete> = Graph::new();
         graph.insert("CONFIG_DEPENDENT", &vec!["CONFIG_PARENT"])?;
         graph.insert("CONFIG_PARENT", &vec![])?;
+        let graph = graph.into_complete()?;
         let deps = graph.dependencies_of(&"CONFIG_DEPENDENT")?;
 
         assert_eq!(deps, vec!["CONFIG_PARENT"]);
@@ -213,20 +233,21 @@ mod tests {
     }
 
     #[test]
-    fn search_of_incomplete_graph_disallowed() -> Result<(), Box<dyn error::Error>> {
-        let mut graph: Graph<&str> = Graph::new();
+    fn cannot_complete_graph_with_missing_dependencies() -> Result<(), Box<dyn error::Error>> {
+        let mut graph: Graph<&str, state::Incomplete> = Graph::new();
         graph.insert("CONFIG_TEST", &vec!["CONFIG_NEVER_INSERTED"])?;
-        assert!(graph.dependencies_of(&"CONFIG_TEST").is_err());
+        assert!(graph.into_complete().is_err());
         Ok(())
     }
 
     #[test]
     fn multiple_intra_independent_dependencies() -> Result<(), Box<dyn error::Error>> {
-        let mut graph: Graph<&str> = Graph::new();
+        let mut graph: Graph<&str, state::Incomplete> = Graph::new();
         let opts = ["CONFIG_TEST", "CONFIG_FIRST_ROOT", "CONFIG_SECOND_ROOT"];
         graph.insert(opts[1], &[])?;
         graph.insert(opts[2], &[])?;
         graph.insert(opts[0], &opts[1..=2])?;
+        let graph = graph.into_complete()?;
         let deps = graph.dependencies_of(&"CONFIG_TEST")?;
         assert_eq!(deps, &opts[1..=2]);
         Ok(())
@@ -234,7 +255,7 @@ mod tests {
 
     #[test]
     fn deep_dependency_tree() -> Result<(), Box<dyn error::Error>> {
-        let mut graph: Graph<&str> = Graph::new();
+        let mut graph: Graph<&str, state::Incomplete> = Graph::new();
         let mut opts: Vec<String> = Vec::with_capacity(10);
         for i in 0..opts.capacity() {
             opts.push(format!("TEST_CONFIG{}", i));
@@ -250,6 +271,8 @@ mod tests {
             assert!(false);
         }
 
+        let graph = graph.into_complete()?;
+
         for (i, opt) in opts.iter().enumerate() {
             let deps = graph.dependencies_of(&opt.as_str())?;
             assert_eq!(deps, &opts[i + 1..opts.len()]);
@@ -260,12 +283,13 @@ mod tests {
 
     #[test]
     fn disjointed_graph() -> Result<(), Box<dyn error::Error>> {
-        let mut graph: Graph<&str> = Graph::new();
+        let mut graph: Graph<&str, state::Incomplete> = Graph::new();
         let opts = ["CONFIG0", "CONFIG1", "CONFIG2", "CONFIG3"];
         graph.insert(&opts[0],&[&opts[1]])?;
         graph.insert(&opts[1], &[])?;
         graph.insert(&opts[2], &[&opts[3]])?;
         graph.insert(&opts[3], &[])?;
+        let graph = graph.into_complete()?;
         let deps = graph.dependencies_of(&opts[0])?;
         assert_eq!(deps, &[opts[1]]);
         let deps = graph.dependencies_of(&opts[1])?;
@@ -279,13 +303,13 @@ mod tests {
 
     #[test]
     fn vertex_cannot_depend_on_itself() {
-        let mut graph: Graph<&str> = Graph::new();
+        let mut graph: Graph<&str, state::Incomplete> = Graph::new();
         assert!(graph.insert(&"CONFIG_TEST", &[&"CONFIG_TEST"]).is_err())
     }
 
     #[test]
     fn dependencies_cannot_include_duplciates() {
-        let mut graph: Graph<&str> = Graph::new();
+        let mut graph: Graph<&str, state::Incomplete> = Graph::new();
         assert!(graph.insert(&"CONFIG_TEST", &[&"CONFIG_ANOTHER", &"CONFIG_ANOTHER"]).is_err());
     }
 }

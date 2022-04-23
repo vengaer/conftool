@@ -1,5 +1,5 @@
 use crate::{ConfigEntry,EntryType};
-use crate::graph::Graph;
+use crate::graph::{state, Graph};
 use regex::Regex;
 use std::{collections,hash,error,fmt,fs,ops,path};
 
@@ -147,7 +147,7 @@ impl<T> From<Vec<T>> for DisplayVec<T> {
     }
 }
 
-fn check_dependencies<'a, T>(graph: &Graph<T>, kvpairs: &'a [(T, T)]) -> Result<(), Box<dyn error::Error>>
+fn check_dependencies<'a, T>(graph: &Graph<T, state::Complete>, kvpairs: &'a [(T, T)]) -> Result<(), Box<dyn error::Error>>
 where
     T: AsRef<str> + fmt::Debug + fmt::Display + Clone +
        Eq + PartialEq<&'a str> + hash::Hash
@@ -190,7 +190,7 @@ where
 }
 
 pub fn validate_config(path: &path::PathBuf, entries: &[ConfigEntry]) -> Result<(), Box<dyn error::Error>> {
-    let mut graph: Graph<&str> = Graph::new();
+    let mut graph: Graph<&str, state::Incomplete> = Graph::new();
     let lines: Vec<String> = fs::read_to_string(path)?
                                 .split("\n")
                                 .map(|s| s.to_owned())
@@ -215,6 +215,7 @@ pub fn validate_config(path: &path::PathBuf, entries: &[ConfigEntry]) -> Result<
                 .collect::<Vec<&str>>())?;
     }
 
+    let graph = graph.into_complete()?;
     check_dependencies(&graph, &kvpairs)?;
     Ok(())
 }
