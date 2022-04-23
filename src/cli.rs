@@ -11,7 +11,7 @@ const MAX_VERBOSITY: usize = 3;
 #[clap(
     name = "conftool",
     author = "Vilhelm Engström <vilhelm.engstrom@tuta.io>",
-    version = "0.1.0",
+    version = "0.1.1",
     about = "Config file dependency management made easy",
 )]
 struct CliArgs {
