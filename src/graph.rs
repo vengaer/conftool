@@ -178,39 +178,66 @@ impl<T> Graph<T, state::Complete>
 where
     T: fmt::Debug + Clone + PartialEq
 {
+    fn find_vertex(&self, value: &T) -> Result<usize, Box<dyn error::Error>> {
+        match self.vertices.iter().position(|v| v.value == *value) {
+            Some(vert) => Ok(vert),
+            None => Err(format!("No vertex matches {:?}", value).into())
+        }
+    }
+
     /// Return a list of dependencies for the supplied value
     pub fn dependencies_of(&self, value: &T) -> Result<Vec<T>, Box<dyn error::Error>> {
-        let vert = match self.vertices.iter().position(|v| v.value == *value) {
-            Some(vert) => vert,
-            None => return Err(format!("No vertex matches {:?}", value).into())
-        };
+        let vert = self.find_vertex(value)?;
 
-        let mut to_traverse:  Vec<usize> = vec![vert];
+        let mut to_traverse: Vec<_> = vec![vert];
         let mut traversed: Vec<usize> = Vec::with_capacity(16);
         let mut deps: Vec<T> = Vec::with_capacity(16);
 
-        while to_traverse.len() != 0usize {
+        while !to_traverse.is_empty() {
             let vert = &self.vertices[to_traverse.pop().unwrap()];
-            let unique: Vec<usize> = vert.parents
-                            .iter()
-                            .map(|x| match x {
-                                Parent::Vertex(x) => *x,
-                                _ => panic!("Impossible")
-                            })
-                            .filter(|x| traversed
-                                        .iter()
-                                        .find(|&y| x == y)
-                                        .is_none())
-                            .collect();
-            deps.extend_from_slice(unique
-                                    .iter()
-                                    .map(|&i| self.vertices[i].value.clone())
-                                    .collect::<Vec<T>>()
-                                    .as_slice());
+            let unique: Vec<usize> = vert.parents.iter()
+                                                 .map(|x| match x {
+                                                    Parent::Vertex(x) => *x,
+                                                    _ => panic!("Impossible")
+                                                  })
+                                                 .filter(|x| traversed.iter()
+                                                                      .find(|&y| x == y)
+                                                                      .is_none())
+                                                 .collect();
+            deps.extend_from_slice(unique.iter()
+                                         .map(|&i| self.vertices[i].value.clone())
+                                         .collect::<Vec<T>>()
+                                         .as_slice());
             to_traverse.extend_from_slice(unique.as_slice());
             traversed.extend_from_slice(unique.as_slice());
         }
         Ok(deps)
+    }
+
+    /// Return a list of vertices that depend on the given one
+    pub fn dependent_vertices(&self, value: &T) -> Result<Vec<T>, Box<dyn error::Error>> {
+        let vert = self.find_vertex(value)?;
+
+        let mut to_traverse: Vec<_> = vec![vert];
+        let mut traversed: Vec<usize> = Vec::with_capacity(16);
+        let mut dependent: Vec<T> = Vec::with_capacity(16);
+
+        while !to_traverse.is_empty() {
+            let vert = &self.vertices[to_traverse.pop().unwrap()];
+            let unique: Vec<usize> = vert.children.iter()
+                                                  .filter(|&x| traversed.iter()
+                                                                       .find(|&y| x == y)
+                                                                       .is_none())
+                                                  .map(|x| *x)
+                                                  .collect();
+            dependent.extend_from_slice(unique.iter()
+                                              .map(|&i| self.vertices[i].value.clone())
+                                              .collect::<Vec<T>>()
+                                              .as_slice());
+            to_traverse.extend_from_slice(unique.as_slice());
+            traversed.extend_from_slice(unique.as_slice());
+        }
+        Ok(dependent)
     }
 }
 
