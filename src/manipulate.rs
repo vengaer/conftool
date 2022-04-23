@@ -157,7 +157,7 @@ fn validate_value(opt: &str, value: &str, ent: &ConfigEntry) -> Result<(), Box<d
 
     if let Some(choices) = &ent.choices {
         if choices.iter().find(|v| v == &value).is_none() {
-            return Err(format!("Invalid choice \"{}\" for option \"{}\"\nValid options are {:?}",
+            return Err(format!("Invalid choice \"{}\" for option \"{}\"\nValid options are {}",
                                value, opt, choices).into());
         }
     }
