@@ -1,4 +1,4 @@
-use conftool::{cli,parse,list,manipulate,validate,Mode,ListOp};
+use conftool::{cli, list, logger, parse, manipulate, validate, ListOp, Mode};
 use std::process;
 
 fn main() {
@@ -9,6 +9,8 @@ fn main() {
             process::exit(1);
         }
     };
+
+    let log = logger::Logger::new(state.verbosity);
 
     if !state.spec.exists() {
         eprintln!("Specification {} does not exist", state.spec.display());
@@ -44,10 +46,10 @@ fn main() {
                 }
             }
         },
-        Mode::Validate => validate::validate_config(&state.config, &entries),
-        Mode::Enable { option } => manipulate::enable(&option, &state.config, &entries),
-        Mode::Disable { option } => manipulate::disable(&option, &state.config, &entries),
-        Mode::Set { option, value } => manipulate::set(&option, &value, &state.config, &entries)
+        Mode::Validate => validate::validate_config(&state.config, &entries, &log),
+        Mode::Enable { option } => manipulate::enable(&option, &state.config, &entries, &log),
+        Mode::Disable { option } => manipulate::disable(&option, &state.config, &entries, &log),
+        Mode::Set { option, value } => manipulate::set(&option, &value, &state.config, &entries, &log)
     };
 
     if let Err(err) = res {

@@ -23,6 +23,8 @@ pub mod validate;
 pub mod manipulate;
 /// Vec wrapper implementing fmt::Display
 pub mod display_vec;
+/// Logger
+pub mod logger;
 
 #[derive(Debug)]
 pub struct State {

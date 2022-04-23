@@ -27,13 +27,7 @@ pub fn show_all(entries: &Vec<ConfigEntry>) {
 }
 
 pub fn dependencies(option: &str, entries: &[ConfigEntry]) -> Result<(), Box<dyn error::Error>> {
-    let mut graph: Graph<&str, state::Incomplete> = Graph::new();
-    for ent in entries {
-        graph.insert(&ent.name, &ent.depends
-                .iter()
-                .map(|s| s.as_str())
-                .collect::<Vec<&str>>())?;
-    }
+    let graph = Graph::<&str, state::Incomplete>::from(entries);
     let graph = graph.into_complete()?;
     let deps = graph.dependencies_of(&option)?;
     println!("{}:", option);
