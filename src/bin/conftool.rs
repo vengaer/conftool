@@ -1,5 +1,6 @@
-use conftool::{cli, list, logger, parse, manipulate, validate, ListOp, Mode};
 use std::process;
+use conftool::{cli, generate, list, logger, parse, manipulate, validate};
+use conftool::{ConfType, ListOp, Mode};
 
 fn main() {
     let state = match cli::parse_args() {
@@ -49,7 +50,10 @@ fn main() {
         Mode::Validate => validate::validate_config(&state.config, &entries, &log),
         Mode::Enable { option } => manipulate::enable(&option, &state.config, &entries, &log),
         Mode::Disable { option } => manipulate::disable(&option, &state.config, &entries, &log),
-        Mode::Set { option, value } => manipulate::set(&option, &value, &state.config, &entries, &log)
+        Mode::Set { option, value } => manipulate::set(&option, &value, &state.config, &entries, &log),
+        Mode::Generate { conftype } => match conftype {
+            ConfType::Defconfig => generate::defconfig(&state.config, &entries, &log)
+        }
     };
 
     if let Err(err) = res {

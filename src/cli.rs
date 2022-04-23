@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use crate::{State, Mode, ListOp};
+use crate::{ConfType, ListOp, Mode, State};
 use std::error;
 use std::path;
 
@@ -65,6 +65,11 @@ enum Subcommands {
         option: String,
         /// The value to assign the option
         value: String
+    },
+    /// Config generation
+    Generate {
+        /// Type of config to generate
+        conftype: String
     }
 }
 
@@ -104,6 +109,10 @@ pub fn parse_args() -> Result<State, Box<dyn error::Error>> {
         Some(Subcommands::Enable { option }) => Some(Mode::Enable { option }),
         Some(Subcommands::Disable { option }) => Some(Mode::Disable { option }),
         Some(Subcommands::Set { option, value }) => Some(Mode::Set { option, value }),
+        Some(Subcommands::Generate { conftype }) => match conftype.as_ref() {
+                "defconfig" => Some(Mode::Generate { conftype: ConfType::Defconfig }),
+                _ => None
+        },
         None => None
     };
     if mode.is_none() {

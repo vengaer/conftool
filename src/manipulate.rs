@@ -1,5 +1,5 @@
 use regex::Regex;
-use std::{error, fs, path};
+use std::{error, fmt, fs, path};
 use std::io::Write;
 use crate::{parse, ConfigEntry, EntryType, Switch};
 use crate::graph::{state, Graph};
@@ -68,13 +68,15 @@ fn disable_dependent(opt: &str, kvpairs: &mut Vec<(String, String)>, entries: &[
     Ok(())
 }
 
-fn write_config(kvpairs: &Vec<(String, String)>, path: &path::PathBuf, log: &Logger)
+pub fn write_config<T>(kvpairs: &Vec<(T, String)>, path: &path::PathBuf, log: &Logger)
     -> Result<(), Box<dyn error::Error>>
+where
+    T: AsRef<str> + fmt::Display
 {
     let mut f = fs::File::create(path)?;
     log.writeln(Verbosity::Lvl2, &format!("Writing config to {}", path.to_str().unwrap()));
     let pad = kvpairs.iter()
-                     .map(|(k, _)| k.len())
+                     .map(|(k, _)| k.as_ref().len())
                      .max()
                      .unwrap();
     log.writeln(Verbosity::Lvl3, &format!("Padding keys to {} chars", pad));

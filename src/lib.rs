@@ -25,6 +25,8 @@ pub mod manipulate;
 pub mod display_vec;
 /// Logger
 pub mod logger;
+/// Config generation
+pub mod generate;
 
 #[derive(Debug)]
 pub struct State {
@@ -42,6 +44,11 @@ pub struct State {
 }
 
 #[derive(Debug)]
+pub enum ConfType {
+    Defconfig
+}
+
+#[derive(Debug)]
 pub enum Mode {
     List {
         ops: Vec<ListOp>
@@ -56,6 +63,9 @@ pub enum Mode {
     Set {
         option: String,
         value: String
+    },
+    Generate {
+        conftype: ConfType
     }
 }
 
