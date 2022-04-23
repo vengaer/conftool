@@ -4,7 +4,7 @@ use std::io::Write;
 use crate::{parse, ConfigEntry, EntryType, Switch};
 use crate::graph::{state, Graph};
 
-fn enable_deps(opt: &str, kvpairs: &mut Vec<(String, String)>, entries: &[ConfigEntry]) -> Result<(), Box<dyn error::Error>> {
+fn enable_dependencies(opt: &str, kvpairs: &mut Vec<(String, String)>, entries: &[ConfigEntry]) -> Result<(), Box<dyn error::Error>> {
     let graph = Graph::<&str, state::Incomplete>::from(entries);
     let graph = graph.into_complete()?;
     let deps = match graph.dependencies_of(&opt) {
@@ -23,6 +23,32 @@ fn enable_deps(opt: &str, kvpairs: &mut Vec<(String, String)>, entries: &[Config
     for dep in &deps {
         if kvpairs.iter().find(|(k, _)| k == dep).is_none() {
             kvpairs.push((dep.to_string(), "y".to_string()));
+        }
+    }
+
+    Ok(())
+}
+
+fn disable_dependent(opt: &str, kvpairs: &mut Vec<(String, String)>, entries: &[ConfigEntry]) -> Result<(), Box<dyn error::Error>> {
+    let graph = Graph::<&str, state::Incomplete>::from(entries);
+    let graph = graph.into_complete()?;
+    let dependent = match graph.dependent_vertices(&opt) {
+        Ok(dependent) => dependent,
+        Err(_) => return Err(format!("Invalid config option \"{}\"", opt).into())
+    };
+
+    for dep in &dependent {
+        let ent = entries.iter().find(|e| e.name == *dep).unwrap();
+        match ent.enttype {
+            EntryType::Switch(_) => {
+                if let Some((_, v)) = kvpairs.iter_mut().find(|(k, _)| k == dep) {
+                    *v = "n".to_string();
+                }
+                else {
+                    kvpairs.push((dep.to_string(), "n".to_string()));
+                }
+            },
+            _ => kvpairs.retain(|(k, _)| k != dep)
         }
     }
 
@@ -70,13 +96,14 @@ fn set_switch(opt: &str, desired: Switch, kvpairs: &mut Vec<(String, String)>, e
 
 pub fn enable(opt: &str, path: &path::PathBuf, entries: &[ConfigEntry]) -> Result<(), Box<dyn error::Error>> {
     let mut kvpairs = parse::parse_config(path, None)?;
-    enable_deps(opt, &mut kvpairs, &entries)?;
+    enable_dependencies(opt, &mut kvpairs, &entries)?;
     set_switch(opt, Switch::Yes, &mut kvpairs, &entries)?;
     write_config(&kvpairs, path)
 }
 
 pub fn disable(opt: &str, path: &path::PathBuf, entries: &[ConfigEntry]) -> Result<(), Box<dyn error::Error>> {
     let mut kvpairs = parse::parse_config(path, None)?;
+    disable_dependent(opt, &mut kvpairs, &entries)?;
     set_switch(opt, Switch::No, &mut kvpairs, &entries)?;
     write_config(&kvpairs, path)
 }
@@ -118,15 +145,18 @@ pub fn set(opt: &str, value: &str, path: &path::PathBuf, entries: &[ConfigEntry]
     let value = value.trim();
     validate_value(opt, value, &ent)?;
 
-    let deps_required = match ent.enttype {
-        EntryType::Switch(_) => value != "n",
-        _ => true
-    };
-
     let mut kvpairs = parse::parse_config(path, None)?;
-    if deps_required {
-        enable_deps(opt, &mut kvpairs, &entries)?;
-    }
+    match ent.enttype {
+        EntryType::Switch(_) => {
+            if value == "n" {
+                disable_dependent(opt, &mut kvpairs, &entries)?;
+            }
+            else {
+                enable_dependencies(opt, &mut kvpairs, &entries)?;
+            }
+        },
+        _ => enable_dependencies(opt, &mut kvpairs, &entries)?
+    };
 
     if let Some((_, v)) = kvpairs.iter_mut().find(|(k, _)| k == opt) {
         *v = value.to_string();
