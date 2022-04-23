@@ -49,11 +49,10 @@ enum Subcommands {
     },
     /// Validate config file
     Validate,
-    /// Set config options
-    Set {
-        /// Set a specific option, automatically enables dependencies
-        #[clap(short, long, value_name = "OPTION")]
-        option: Option<String>
+    /// Enable config options
+    Enable {
+        /// Enable specific option, automatically handling dependencies
+        option: String
     }
 }
 
@@ -90,16 +89,11 @@ pub fn parse_args() -> Result<State, Box<dyn error::Error>> {
             }
         }
         Some(Subcommands::Validate) => Some(Mode::Validate),
-        Some(Subcommands::Set { option }) => {
-            match option {
-                Some(option) => Some(Mode::Set { option }),
-                _ => None
-            }
-        },
+        Some(Subcommands::Enable { option }) => Some(Mode::Enable { option }),
         None => None
     };
     if mode.is_none() {
-        return Err("No submode specified".into());
+        return Err("Invalid syntax".into());
     }
 
     Ok(State {

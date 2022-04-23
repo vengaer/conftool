@@ -47,9 +47,8 @@ fn main() {
         Mode::Validate => {
             validate::validate_config(&state.config, &entries)
         },
-        Mode::Set { option } => {
-            /* TODO */
-            Ok(())
+        Mode::Enable { option } => {
+            manipulate::enable(&option, &state.config, &entries)
         }
     };
 

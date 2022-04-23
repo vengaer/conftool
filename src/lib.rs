@@ -19,6 +19,8 @@ pub mod list;
 pub mod parse;
 /// Validation of existing config
 pub mod validate;
+/// Config manipulation
+pub mod manipulate;
 
 #[derive(Debug)]
 pub struct State {
@@ -41,7 +43,7 @@ pub enum Mode {
         ops: Vec<ListOp>
     },
     Validate,
-    Set {
+    Enable {
         option: String
     }
 }
