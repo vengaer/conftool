@@ -1,4 +1,4 @@
-use crate::{ConfigEntry,EntryType};
+use crate::{parse, ConfigEntry, EntryType};
 use crate::graph::{state, Graph};
 use regex::Regex;
 use std::{collections,hash,error,fmt,fs,ops,path};
@@ -147,18 +147,18 @@ impl<T> From<Vec<T>> for DisplayVec<T> {
     }
 }
 
-fn check_dependencies<'a, T>(graph: &Graph<T, state::Complete>, kvpairs: &'a [(T, T)]) -> Result<(), Box<dyn error::Error>>
+fn check_dependencies<T>(graph: &Graph<T, state::Complete>, kvpairs: &[(T, T)]) -> Result<(), Box<dyn error::Error>>
 where
     T: AsRef<str> + fmt::Debug + fmt::Display + Clone +
-       Eq + PartialEq<&'a str> + hash::Hash
+       Eq + hash::Hash
 {
     let mut missing: collections::HashMap<T, (Cause, Vec<&T>)> = collections::HashMap::new();
     for (opt, _) in kvpairs {
         let deps = graph.dependencies_of(opt)?;
 
         for dep in deps {
-            if let Some((_, val)) = kvpairs.iter().find(|(k, _)| k == &dep) {
-                if val != &"y" {
+            if let Some((_, val)) = kvpairs.iter().find(|(k, _)| k.as_ref() == dep.as_ref()) {
+                if val.as_ref() != "y" {
                     if let Some((_, opts)) = missing.get_mut(&dep) {
                         opts.push(opt);
                     }
@@ -194,21 +194,17 @@ pub fn validate_config(path: &path::PathBuf, entries: &[ConfigEntry]) -> Result<
                                 .split("\n")
                                 .map(|s| s.to_owned())
                                 .collect();
-
-    let kvpairs: Vec<(&str, &str)> = lines.iter()
-                                          .filter(|&s| !s.is_empty())
-                                          .map(|s| s.split("=")
-                                                    .map(|s| s.trim())
-                                                    .collect())
-                                          .map(|v: Vec<&str>| (v[0], v[1]))
-                                          .collect();
-
     validate_line_format(&lines)?;
+    let kvpairs = parse::parse_config(path, Some(lines))?;
+
     validate_options(&kvpairs, &entries)?;
     validate_values(&kvpairs, &entries)?;
 
     let graph = Graph::<&str, state::Incomplete>::from(entries);
     let graph = graph.into_complete()?;
-    check_dependencies(&graph, &kvpairs)?;
+    let slice: Vec<(&str, &str)> = kvpairs.iter()
+                                          .map(|(k, v)| (k.as_ref(), v.as_ref()))
+                                          .collect();
+    check_dependencies(&graph, &slice)?;
     Ok(())
 }

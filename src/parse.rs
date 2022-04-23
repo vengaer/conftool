@@ -63,3 +63,26 @@ pub fn parse_spec(path: &path::PathBuf) -> Result<Vec<ConfigEntry>, Box<dyn erro
 
     Ok(entries)
 }
+
+pub fn parse_config(path: &path::PathBuf, lines: Option<Vec<String>>) -> Result<Vec<(String, String)>, Box<dyn error::Error>> {
+    let lines = match lines {
+        Some(lines) => lines,
+        None => {
+            let read: Vec<String> = fs::read_to_string(path)?
+                                       .split("\n")
+                                       .map(|s| s.to_owned())
+                                       .collect();
+            read
+        }
+    };
+
+    let kvpairs = lines.iter()
+                       .filter(|&s| !s.is_empty())
+                       .map(|s| s.split("=")
+                                 .map(|s| s.trim())
+                                 .collect())
+                       .map(|v: Vec<&str>| (v[0], v[1]))
+                       .map(|(k, v)| (k.to_owned(), v.to_owned()))
+                       .collect();
+    Ok(kvpairs)
+}
