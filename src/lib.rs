@@ -16,7 +16,7 @@ pub mod graph;
 /// Functions related to list subcommand
 pub mod list;
 /// Json and config parsing
-pub mod parser;
+pub mod parse;
 /// Validation of existing config
 pub mod validate;
 

@@ -1,4 +1,4 @@
-use conftool::{cli,parser,list,validate,Mode,ListOp};
+use conftool::{cli,parse,list,manipulate,validate,Mode,ListOp};
 use std::process;
 
 fn main() {
@@ -23,7 +23,7 @@ fn main() {
         }
     }
 
-    let entries = parser::parse_spec(&state.spec).unwrap();
+    let entries = parse::parse_spec(&state.spec).unwrap();
     let res = match state.mode {
         Mode::List { mut ops } => {
             loop {
