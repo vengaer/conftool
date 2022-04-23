@@ -9,10 +9,10 @@ const MAX_VERBOSITY: usize = 3;
 
 #[derive(Parser, Debug)]
 #[clap(
-    author = "Vilhelm Engström",
+    name = "conftool",
+    author = "Vilhelm Engström <vilhelm.engstrom@tuta.io>",
     version = "0.1.0",
-    about = "Simple dependency handling in config files",
-    long_about = None
+    about = "Config file dependency management made easy",
 )]
 struct CliArgs {
     /// Path to config specification, optional
