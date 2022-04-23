@@ -45,6 +45,9 @@ pub enum Mode {
     Validate,
     Enable {
         option: String
+    },
+    Disable {
+        option: String
     }
 }
 

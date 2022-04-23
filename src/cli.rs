@@ -51,7 +51,12 @@ enum Subcommands {
     Validate,
     /// Enable config options
     Enable {
-        /// Enable specific option, automatically handling dependencies
+        /// Option to enable, automatically handling dependencies
+        option: String
+    },
+    /// Disable config options
+    Disable {
+        /// Option to disable
         option: String
     }
 }
@@ -90,6 +95,7 @@ pub fn parse_args() -> Result<State, Box<dyn error::Error>> {
         }
         Some(Subcommands::Validate) => Some(Mode::Validate),
         Some(Subcommands::Enable { option }) => Some(Mode::Enable { option }),
+        Some(Subcommands::Disable { option }) => Some(Mode::Disable { option }),
         None => None
     };
     if mode.is_none() {
