@@ -1,4 +1,5 @@
 use crate::{display_vec, parse, ConfigEntry, EntryType};
+use crate::EntryType::Switch;
 use crate::graph::{state, Graph};
 use crate::logger::{Logger, Verbosity};
 use regex::Regex;
@@ -120,14 +121,20 @@ impl fmt::Display for Cause {
     }
 }
 
-fn check_dependencies<T>(graph: &Graph<T, state::Complete>, kvpairs: &[(T, T)], log: &Logger)
+fn check_dependencies<T>(graph: &Graph<T, state::Complete>, kvpairs: &[(T, T)], entries: &[ConfigEntry], log: &Logger)
     -> Result<(), Box<dyn error::Error>>
 where
     T: AsRef<str> + fmt::Debug + fmt::Display + Clone +
        Eq + hash::Hash
 {
     let mut missing: collections::HashMap<T, (Cause, Vec<&T>)> = collections::HashMap::new();
-    for (opt, _) in kvpairs {
+    for (opt, val) in kvpairs {
+        let ent = entries.iter().find(|e| e.name == opt.as_ref()).unwrap();
+        if let Switch(_) = ent.enttype {
+            if "n" == val.as_ref() {
+                continue;
+            }
+        }
         log.writeln(Verbosity::Lvl1, &format!("Checking dependencies for {}", opt));
         let deps = graph.dependencies_of(opt)?;
         log.writeln(Verbosity::Lvl3, &format!("Dependencies: {:?}", deps));
@@ -184,6 +191,6 @@ pub fn validate_config(path: &path::PathBuf, entries: &[ConfigEntry], log: &Logg
     let slice: Vec<(&str, &str)> = kvpairs.iter()
                                           .map(|(k, v)| (k.as_ref(), v.as_ref()))
                                           .collect();
-    check_dependencies(&graph, &slice, log)?;
+    check_dependencies(&graph, &slice, &entries, log)?;
     Ok(())
 }
